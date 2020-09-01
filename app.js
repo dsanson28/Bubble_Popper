@@ -1,32 +1,70 @@
-// 2 Bubbles per second = 1 bubble every 500ms
-setInterval(function () {
-  // make a bubble
-  // give it a random position
-  // add it to the screen
-  let newBubble = $(`<div class="bubble">`)
-  newBubble.css({
-    left: 50 + Math.floor(Math.random() * 600),
-    top: 50 + Math.floor(Math.random() * 600)
-  });
-  $('#app').append(newBubble);
-}, 500)
+let BUBBLES = [];
 
-setInterval(function () {
-  let bubbles = $('.bubble');
+const app = $('#app');
 
-  for (let i = 0; i < bubbles.length; i++) {
-    let nextBubble = $(bubbles[i]);
+function makeNewBubble() {
+  const _width = app.width();
+  const _height = app.height();
 
-    let nextLeft = Number(nextBubble.css('left').substr(0, nextBubble.css('left').length - 2)) + 1;
-    let nextTop = Number(nextBubble.css('top').substr(0, nextBubble.css('top').length - 2)) + 2;
-
-    nextBubble.css({
-      left: nextLeft,
-      top: nextTop
-    })
+  let newBubble = {
+    position: {
+      top: Math.floor(Math.random() * _height),
+      left: Math.floor(Math.random() * _width),
+    },
+    direction: {
+      top: Math.floor(Math.random() * 5) - 2,
+      left: Math.floor(Math.random() * 5) - 2
+    }
   }
-}, 100)
+
+  return newBubble;
+}
+
+function makeBubbleElement(bubble) {
+  return $(`<div class="bubble">`).css({
+    top: bubble.position.top,
+    left: bubble.position.left
+  }).data('me', bubble);
+}
+
+function updateBubbleElement(bubbleElement) {
+  let bubble = bubbleElement.data('me');
+
+  bubbleElement.css({
+    top: bubble.position.top,
+    left: bubble.position.left
+  });
+}
+
+setInterval(function () {
+  let newBubble = makeNewBubble();
+  let newBubbleElement = makeBubbleElement( newBubble );
+
+  BUBBLES.push(newBubbleElement);
+
+  app.append(newBubbleElement);
+
+  console.log(BUBBLES.length);
+}, 1000)
+
+setInterval(function () {
+  BUBBLES.forEach(function (bubbleElement) {
+    const bubble = bubbleElement.data('me');
+    bubble.position.top += bubble.direction.top;
+    bubble.position.left += bubble.direction.left;
+
+    updateBubbleElement(bubbleElement);
+  })
+}, 30);
 
 $('#app').on('click', '.bubble', function (event) {
-  $(this).fadeOut();
-})
+  const bubbleTarget = $(event.target);
+
+  bubbleTarget.fadeOut(400, function () {
+    BUBBLES = BUBBLES.filter(function(bubbleElement) {
+      return bubbleElement !== bubbleTarget;
+    });
+
+    console.log(BUBBLES.length);
+  });
+});
